@@ -1,3 +1,5 @@
+API: BreweryDB https://sandbox-api.brewerydb.com/v2/
+
 1. What goal will your website be designed to achieve?
 > - The goal is to create a social network where users can keep track of breweries / beers they have visited / had, to be able to write reviews of both, share recommendations with others, and put together a bucket list of beers / breweries they would like to have / visit.
 
