@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+
+      <h2>{{g.user.username}}'s reviews</h2>
+      <div class="container-fluid">
+        <div class="row">
+          {% for review in user_reviews %}
+            <div class="col-sm-6 col-xl-4 my-1">
+              <div class="card">
+                <div class="card-text">
+                  <p>{{review.beer_name}}</p>
+                </div>
+
+                <div class="card-body">
+                  <p>Rating: {{review.rating}}</p>
+                  <p>{{review.text}}</p>
+                  <i class="fas fa-edit"></i>
+                  <a method = "post" href="/user/reviews/{{review.id}}/delete"><i class ="far fa-trash-alt"></i></a>
+                </div>
+
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+  </div>
+
+{% endblock %}

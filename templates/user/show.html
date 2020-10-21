@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+
+      <h2>Find Beers by Categories</h2>
+      <div class="container-fluid">
+        <div class="row">
+          {% for category in categories %}
+            <div class="col-sm-6 col-xl-4 my-1">
+              <div class="card">
+                <div class="card-text">
+                  <p><a href="/category/{{category.id}}">{{category.name}}</a></p>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+
+  </div>
+  <!-- <p>{{g.user.tried_beer_ids}}</p>
+  toggle class - review warbler toggle class on likes -->
+
+{% endblock %}

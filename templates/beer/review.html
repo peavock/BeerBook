@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h4 class="display-5">Write a Review</h4>
+<h4 class = "display-5">{{beer.name}}</h4>
+<p>{{beer.description}}</p>
+
+<form method="POST">
+
+  {{ form.hidden_tag() }}
+
+  {% for field in form 
+    if field.widget.input_type != 'hidden' %}
+  <p>
+    {{ field.label }}
+    {{ field }}
+
+    {% for error in field.errors %}
+    <p class="form-text text-danger font-italic">
+      {{error}}
+    </p>
+    {% endfor %}
+  </p>
+  {% endfor %}
+
+  <button type="submit" class="btn btn-info">Submit</button>
+
+</form>
+{% endblock %}
