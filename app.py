@@ -66,8 +66,10 @@ def signup_page():
 
         do_login(new_user)
 
-        flash (f"Welcome back to Cicerone {new_user.username}")
-        return redirect(f"/user/{user.id}")
+        user_id = session[CURR_USER_KEY]
+
+        flash (f"Welcome to Cicerone {new_user.username}", "success")
+        return redirect(f"/user/{user_id}")
 
     else:   
         return render_template("signup.html", form = form)
@@ -85,7 +87,7 @@ def login_page():
 
         if user:
             do_login(user)
-            flash(f"Welcome back to Cicerone {user.username}!")
+            flash(f"Welcome back to Cicerone {user.username}!", "success")
             return redirect(f"/user/{user.id}")
 
     return render_template("login.html", form = form)
@@ -175,7 +177,7 @@ def show_user_reviews(user_id):
 def delete_review(review_id):
     """delete reviews"""
 
-    del_review = Review.query.get(review_id).one()
+    del_review = Review.query.get(review_id)
 
     db.session.delete(del_review)
     db.session.commit()
@@ -183,6 +185,41 @@ def delete_review(review_id):
     user_id = session[CURR_USER_KEY]
 
     return redirect(f"/user/{user_id}/reviews")
+
+@app.route('/user/reviews/<review_id>/edit', methods = ["GET","POST"])
+def edit_review(review_id):
+    """edit a review"""
+
+    edit_review = Review.query.get(review_id)
+
+    form = ReviewForm(obj = edit_review)
+
+    beer_id = edit_review.beer_id
+
+    response = requests.get(f"{API_BASE_URL}/beers",
+                        params = {'key':API_KEY,'ids':beer_id})
+
+    beer = response.json()["data"][0]
+
+    user_id = session[CURR_USER_KEY]
+
+    if form.validate_on_submit():
+
+        edit_review.rating = form.rating.data
+        edit_review.text = form.text.data
+
+        db.session.add(edit_review)
+        db.session.commit()
+
+        flash("Review Updated","success")
+
+        return redirect(f"/user/{user_id}/reviews")
+
+    else:
+        return render_template("beer/editreview.html",form = form, beer = beer)
+
+
+    
 
 @app.route('/user/<user_id>/tried', methods = ["GET"])
 def show_tried_beers(user_id):

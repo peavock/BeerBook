@@ -22,18 +22,21 @@
     <div class="navbar-header">
 
     </div>
+    <ul class="nav navbar-nav navbar-left">
+      <li>CICERONE</li>
+    </ul>
     <ul class="nav navbar-nav navbar-right">
 
       {% if not g.user %}
-      <li><a href="/signup">Sign up</a></li>
-      <li><a href="/login">Log in</a></li>
+      <li><a href="/signup">SIGN UP</a></li>
+      <li><a href="/login">LOG IN</a></li>
       {% else %}
       <li><a href="/user/{{g.user.id}}">HOME</a></li>
       <li><a href="/user/{{g.user.id}}/tried">TRIED</a></li>
       <li><a href="/user/{{g.user.id}}/liked">LIKED</a></li>
       <li><a href="/user/{{g.user.id}}/wished">WISHED</a></li>
       <li><a href="/user/{{g.user.id}}/reviews">REVIEWS</a></li>
-      <li><a href="/logout">Log out</a></li>
+      <li><a href="/logout">LOG OUT</a></li>
       {% endif %}
     </ul>
   </div>

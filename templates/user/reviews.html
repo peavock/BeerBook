@@ -9,14 +9,20 @@
             <div class="col-sm-6 col-xl-4 my-1">
               <div class="card">
                 <div class="card-text">
-                  <p>{{review.beer_name}}</p>
+                  <p class="card-title">{{review.beer_name}}</p>
                 </div>
 
                 <div class="card-body">
                   <p>Rating: {{review.rating}}</p>
                   <p>{{review.text}}</p>
-                  <i class="fas fa-edit"></i>
-                  <a method = "post" href="/user/reviews/{{review.id}}/delete"><i class ="far fa-trash-alt"></i></a>
+                  <div class="d-inline-flex">
+                    <form method = "post" action="/user/reviews/{{review.id}}/edit">
+                      <button><i class ="fas fa-edit text-dark"></i></button>
+                    </form>
+                    <form method = "post" action="/user/reviews/{{review.id}}/delete">
+                      <button  ><i class ="far fa-trash-alt text-danger"></i></button>
+                    </form>
+                  </div>
                 </div>
 
               </div>
