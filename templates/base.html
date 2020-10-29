@@ -28,10 +28,11 @@
     <ul class="nav navbar-nav navbar-right">
 
       {% if not g.user %}
+      <li><a href="/">HOME</a></li>
       <li><a href="/signup">SIGN UP</a></li>
       <li><a href="/login">LOG IN</a></li>
       {% else %}
-      <li><a href="/user/{{g.user.id}}">HOME</a></li>
+      <li><a href="/">HOME</a></li>
       <li><a href="/user/{{g.user.id}}/tried">TRIED</a></li>
       <li><a href="/user/{{g.user.id}}/liked">LIKED</a></li>
       <li><a href="/user/{{g.user.id}}/wished">WISHED</a></li>
@@ -41,7 +42,6 @@
     </ul>
   </div>
 </nav>
-
 <div class="container">
   {% for category, message in get_flashed_messages(with_categories=True) %}
   <div class="alert alert-{{ category }}">{{ message }}</div>

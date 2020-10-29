@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container">
 
-      <h2>Beers {{g.user.username}} likes</h2>
+      <h2>Beers {{user.username}} likes</h2>
       <div class="container-fluid">
         <div class="row">
           {% for beer in beers %}
@@ -17,21 +17,39 @@
 
                 <div class="card-body">
                     <p>{{beer.description}}</p>
-                    <p>ABV: {{beer.abv}}</p>
-                    <a href="/beer/tried/{{beer.id}}">
-                        <i class="far fa-check-square 
-                        {{'text-success' if beer.id in tried_beer_ids else 'text-secondary'}}"></i>
-                    </a>
-                    <a href="/beer/liked{{beer.id}}">
+                    <ul>
+                      <li>ABV: {{beer.abv}}%</li>
+                      <li>Category: <a href="/category/{{beer.style.categoryId}}">
+                        {{beer.style.category.name}}
+                      </a></li>
+                      <li>Style: <a href="/style/{{beer.style.id}}">
+                        {{beer.style.name}}
+                      </a></li>
+                    </ul>
+                    {% if g.user.id == user.id %}
+                      <a href="/beer/tried/{{beer.id}}">
+                          <i class="far fa-check-square 
+                          {{'text-success' if beer.id in tried_beer_ids else 'text-secondary'}}"></i>
+                      </a>
+                      <a href="/beer/liked/{{beer.id}}">
+                          <i class="far fa-thumbs-up 
+                          {{'text-success' if beer.id in liked_beer_ids else 'text-secondary'}}"></i>
+                      </a>
+                      <a href="/beer/wished/{{beer.id}}">
+                          <i class="far fa-flag 
+                          {{'text-warning' if beer.id in wished_beer_ids else 'text-secondary'}}"></i>
+                      </a>
+                      <a href="/beer/review/{{beer.id}}"><i class="far fa-comment"></i>
+                      </a>
+                    {% else %}
+                      <i class="far fa-check-square 
+                      {{'text-success' if beer.id in tried_beer_ids else 'text-secondary'}}"></i>
                         <i class="far fa-thumbs-up 
                         {{'text-success' if beer.id in liked_beer_ids else 'text-secondary'}}"></i>
-                    </a>
-                    <a href="/beer/wished/{{beer.id}}">
                         <i class="far fa-flag 
                         {{'text-warning' if beer.id in wished_beer_ids else 'text-secondary'}}"></i>
-                    </a>
-                    <a href="/beer/review/{{beer.id}}"><i class="far fa-comment"></i>
-                    </a>
+                        <i class="far fa-comment"></i>
+                    {% endif %}
                 </div>
               </div>
             </div>

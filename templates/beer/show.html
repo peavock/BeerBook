@@ -15,8 +15,17 @@
                 {% endif %}
                 <div class="card-body">
                   <p>{{beer.description}}</p>
-                  
-                  <p>ABV: {{beer.abv}}</p>
+                  <ul>
+                    <li>ABV: {{beer.abv}}%</li>
+                    <li>Category: <a href="/category/{{beer.style.categoryId}}">
+                      {{beer.style.category.name}}
+                    </a></li>
+                    <li>Style: <a href="/style/{{beer.style.id}}">
+                      {{beer.style.name}}
+                    </a></li>
+                  </ul>
+
+                  {% if g.user %}
                   <a href="/beer/tried/{{beer.id}}">
                       <i class="far fa-check-square 
                       {{'text-success' if beer.id in tried_beer_ids else 'text-secondary'}}"></i>
@@ -31,6 +40,7 @@
                   </a>
                   <a href="/beer/review/{{beer.id}}"><i class="far fa-comment"></i>
                   </a>
+                  {% endif %}
               </div>
               </div>
             </div>
@@ -52,16 +62,18 @@
               <div class="card-body">
                 <p>Rating: {{review.rating}}</p>
                 <p>{{review.text}}</p>
-                <p>Author: {{review.author.username}}</p>
-                {% if g.user.id == review.author.id %}
-                    <div class="d-inline-flex">
-                    <form method = "post" action="/user/reviews/{{review.id}}/edit">
-                        <button><i class ="fas fa-edit text-dark"></i></button>
-                    </form>
-                    <form method = "post" action="/user/reviews/{{review.id}}/delete">
-                        <button  ><i class ="far fa-trash-alt text-danger"></i></button>
-                    </form>
-                    </div>
+                <p>Author: <a href="/user/{{review.author.id}}/reviews">{{review.author.username}}</a></p>
+                {% if g.user %}
+                  {% if g.user.id == review.author.id %}
+                      <div class="d-inline-flex">
+                      <form method = "post" action="/user/reviews/{{review.id}}/edit">
+                          <button><i class ="fas fa-edit text-dark"></i></button>
+                      </form>
+                      <form method = "post" action="/user/reviews/{{review.id}}/delete">
+                          <button  ><i class ="far fa-trash-alt text-danger"></i></button>
+                      </form>
+                      </div>
+                  {% endif %}
                 {% endif %}
               </div>
 

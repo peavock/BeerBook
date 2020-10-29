@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container">
 
-      <h2>{{g.user.username}}'s reviews</h2>
+      <h2>{{user.username}}'s reviews</h2>
       <div class="container-fluid">
         <div class="row">
           {% for review in user_reviews %}
@@ -15,6 +15,7 @@
                 <div class="card-body">
                   <p>Rating: {{review.rating}}</p>
                   <p>{{review.text}}</p>
+                  {% if g.user.id == user.id %}
                   <div class="d-inline-flex">
                     <form method = "post" action="/user/reviews/{{review.id}}/edit">
                       <button><i class ="fas fa-edit text-dark"></i></button>
@@ -23,6 +24,7 @@
                       <button  ><i class ="far fa-trash-alt text-danger"></i></button>
                     </form>
                   </div>
+                  {% endif %}
                 </div>
 
               </div>

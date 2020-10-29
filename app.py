@@ -43,11 +43,14 @@ def do_logout():
     if CURR_USER_KEY in session:
         del session[CURR_USER_KEY]
 
+######  User log on and log-off routes:
 
 @app.route('/')
 def show_homepage():
+    """ Show a welcome page that shows all beer categories"""
+    categories = Category.query.all()
 
-    return render_template("base.html")
+    return render_template('welcome.html',categories = categories)
 
 @app.route('/signup', methods = ["GET","POST"])
 def signup_page():
@@ -66,10 +69,10 @@ def signup_page():
 
         do_login(new_user)
 
-        user_id = session[CURR_USER_KEY]
+        # user_id = session[CURR_USER_KEY]
 
         flash (f"Welcome to Cicerone {new_user.username}", "success")
-        return redirect(f"/user/{user_id}")
+        return redirect("/")
 
     else:   
         return render_template("signup.html", form = form)
@@ -88,7 +91,7 @@ def login_page():
         if user:
             do_login(user)
             flash(f"Welcome back to Cicerone {user.username}!", "success")
-            return redirect(f"/user/{user.id}")
+            return redirect("/")
 
     return render_template("login.html", form = form)
 
@@ -98,12 +101,16 @@ def logout():
     session.pop(CURR_USER_KEY)
     return redirect("/")
 
-@app.route('/user/<user_id>', methods = ["GET"])
-def show_user_page(user_id):
+# @app.route('/user/<user_id>', methods = ["GET"])
+# def show_user_page(user_id):
 
-    categories = Category.query.all()
+#     if 
+#     categories = Category.query.all()
 
-    return render_template('user/show.html',categories = categories)
+#     return render_template('user/show.html',categories = categories)
+
+
+##### Routes displaying beer styles by category / beers by style / beer with details
 
 @app.route('/category/<category_id>', methods = ["GET"])
 def show_category_page(category_id):
@@ -124,13 +131,19 @@ def show_style_page(style_id):
 
     beers = response.json()["data"]
 
-    user_id = session[CURR_USER_KEY]
+    if CURR_USER_KEY in session:
+        """ if user is logged in, need to know tried / liked / wished beer ids"""
+        user_id = session[CURR_USER_KEY]
 
-    tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
-    liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
-    wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
+        tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
+        liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
+        wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
 
-    return render_template("/beer/style.html", style = style_type, beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+        return render_template("/beer/style.html", style = style_type, beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+
+    else:
+
+        return render_template("/beer/style.html", style = style_type, beers = beers)
 
 @app.route('/beer/<beer_id>', methods = ["GET"])
 def show_beer_page(beer_id):
@@ -140,109 +153,143 @@ def show_beer_page(beer_id):
     
     beer = response.json()["data"][0]
 
-    user_id = session[CURR_USER_KEY]
-
     reviews = Review.query.filter_by(beer_id = beer_id).all()
 
-    tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
-    liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
-    wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
+    if CURR_USER_KEY in session:
+        """ if user is logged in, need to know tried / liked / wished beer ids"""
+        user_id = session[CURR_USER_KEY]
 
-    return render_template("beer/show.html", beer = beer, reviews = reviews, 
-        tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+        tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
+        liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
+        wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
 
+        return render_template("beer/show.html", beer = beer, reviews = reviews, 
+            tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+
+    else:
+        return render_template("beer/show.html", beer =beer, reviews = reviews)
+
+
+##### Routes dealing with reviews - posting one, editing / deleting reviews
 @app.route('/beer/review/<beer_id>', methods = ["GET","POST"])
 def handle_review_page(beer_id):
     """Page with form to fill out review of beer and submit"""
-
-    form = ReviewForm()
-    response = requests.get(f"{API_BASE_URL}/beers",
-                        params = {'key':API_KEY,'ids':beer_id})
-    
-    beer = response.json()["data"][0]
-
-
-    user_id = session[CURR_USER_KEY]
-
-    if form.validate_on_submit():
-
-        new_review = Review(
-            beer_name = beer["name"],
-            user_id = user_id,
-            beer_id = beer_id,
-            rating = form.rating.data,
-            text = form.text.data
-
-        )
-
-        db.session.add(new_review)
-        db.session.commit()
+    if CURR_USER_KEY in session:
+        form = ReviewForm()
+        response = requests.get(f"{API_BASE_URL}/beers",
+                            params = {'key':API_KEY,'ids':beer_id})
         
+        beer = response.json()["data"][0]
 
-        return redirect(f"/user/{user_id}/reviews")
 
-    else:   
-        return render_template("beer/review.html", form = form, beer = beer)
+        user_id = session[CURR_USER_KEY]
 
-@app.route('/user/<user_id>/reviews', methods = ["GET"])
-def show_user_reviews(user_id):
-    """show a page with the reviews that a user has written"""
+        if form.validate_on_submit():
 
-    user_reviews = Review.query.filter_by(user_id = user_id).all()
+            new_review = Review(
+                beer_name = beer["name"],
+                user_id = user_id,
+                beer_id = beer_id,
+                rating = form.rating.data,
+                text = form.text.data
+            )
 
-    return render_template("/user/reviews.html", user_reviews = user_reviews)
+            db.session.add(new_review)
+            db.session.commit()
+            
+            flash("Review submitted!","success")
 
-@app.route('/user/reviews/<review_id>/delete', methods = ["POST"])
+            return redirect(f"/user/{user_id}/reviews")
+
+        else:   
+            return render_template("beer/review.html", form = form, beer = beer)
+
+    else:
+        flash("Please Log-In First", "danger")
+        return redirect("/")
+
+@app.route('/user/reviews/<review_id>/delete', methods = ["GET","POST"])
 def delete_review(review_id):
-    """delete reviews"""
+    """if user is logged in and owns review, delete reviews"""
 
-    del_review = Review.query.get(review_id)
+    if CURR_USER_KEY in session:
+        del_review = Review.query.get(review_id)
 
-    db.session.delete(del_review)
-    db.session.commit()
+        if session[CURR_USER_KEY] == del_review.author.id:
 
-    user_id = session[CURR_USER_KEY]
+            db.session.delete(del_review)
+            db.session.commit()
 
-    return redirect(f"/user/{user_id}/reviews")
+            user_id = session[CURR_USER_KEY]
+
+            return redirect(f"/user/{user_id}/reviews")
+
+        else:
+            flash("Only author can edit or delete posts!","warning")
+            return redirect("/")
+
+    else:
+        flash("Must be logged-in","danger")
+        return redirect("/")
 
 @app.route('/user/reviews/<review_id>/edit', methods = ["GET","POST"])
 def edit_review(review_id):
-    """edit a review"""
+    """if user is logged in and owns review, edit a review"""
 
-    edit_review = Review.query.get(review_id)
+    if CURR_USER_KEY in session:
 
-    form = ReviewForm(obj = edit_review)
+        edit_review = Review.query.get(review_id)
 
-    beer_id = edit_review.beer_id
+        if session[CURR_USER_KEY] == edit_review.author.id:
+            form = ReviewForm(obj = edit_review)
 
-    response = requests.get(f"{API_BASE_URL}/beers",
-                        params = {'key':API_KEY,'ids':beer_id})
+            beer_id = edit_review.beer_id
 
-    beer = response.json()["data"][0]
+            response = requests.get(f"{API_BASE_URL}/beers",
+                                params = {'key':API_KEY,'ids':beer_id})
 
-    user_id = session[CURR_USER_KEY]
+            beer = response.json()["data"][0]
 
-    if form.validate_on_submit():
+            user_id = session[CURR_USER_KEY]
 
-        edit_review.rating = form.rating.data
-        edit_review.text = form.text.data
+            if form.validate_on_submit():
 
-        db.session.add(edit_review)
-        db.session.commit()
+                edit_review.rating = form.rating.data
+                edit_review.text = form.text.data
 
-        flash("Review Updated","success")
+                db.session.add(edit_review)
+                db.session.commit()
 
-        return redirect(f"/user/{user_id}/reviews")
+                flash("Review Updated","success")
+
+                return redirect(f"/user/{user_id}/reviews")
+
+            else:
+                return render_template("beer/editreview.html",form = form, beer = beer)
+
+        else:
+            flash("Only author can edit or delete posts!","warning")
+            return redirect("/")
 
     else:
-        return render_template("beer/editreview.html",form = form, beer = beer)
+        flash("Must be logged-in","danger")
+        return redirect("/")
 
+#####Routes for user specific content - reviews, tried / liked / wished beers
+@app.route('/user/<user_id>/reviews', methods = ["GET"])
+def show_user_reviews(user_id):
+    """show a page with the reviews that a user has written"""
+    user = User.query.get(user_id)
 
-    
+    user_reviews = Review.query.filter_by(user_id = user_id).all()
+
+    return render_template("/user/reviews.html", user_reviews = user_reviews, user = user)
 
 @app.route('/user/<user_id>/tried', methods = ["GET"])
 def show_tried_beers(user_id):
     """show a page with the beers a user has tried"""
+
+    user = User.query.get(user_id)
 
     tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
     liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
@@ -258,11 +305,14 @@ def show_tried_beers(user_id):
 
         beers.append(beer)
 
-    return render_template("/beer/tried.html", beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+    return render_template("/beer/tried.html", beers = beers, user = user, 
+        tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
 
 @app.route('/user/<user_id>/liked', methods = ["GET"])
 def show_liked_beers(user_id):
     """show a page with the beers a user has liked"""
+
+    user = User.query.get(user_id)
     
     tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
     liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
@@ -278,11 +328,14 @@ def show_liked_beers(user_id):
 
         beers.append(beer)
 
-    return render_template("/beer/liked.html", beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+    return render_template("/beer/liked.html", beers = beers, user = user,
+        tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
 
 @app.route('/user/<user_id>/wished', methods = ["GET"])
 def show_wished_beers(user_id):
     """show a page with the beers a user wants to try"""
+
+    user = User.query.get(user_id)
 
     tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
     liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
@@ -298,82 +351,96 @@ def show_wished_beers(user_id):
 
         beers.append(beer)
 
-    return render_template("/beer/wished.html", beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+    return render_template("/beer/wished.html", beers = beers, user = user,
+        tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
 
+
+#####Routes to update status of tried / wished / liked
 @app.route("/beer/tried/<beer_id>", methods = ["GET"])
 def update_tried_beer(beer_id):
     """ change status of tried beer (remove or update as necessary)"""
-    user_id = session[CURR_USER_KEY]
+    if CURR_USER_KEY in session:
+        user_id = session[CURR_USER_KEY]
 
-    tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
+        tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
 
-    print (tried_beer_ids)
+        print (tried_beer_ids)
 
-    if beer_id in tried_beer_ids:
-        tried_beer = TriedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
-        print(tried_beer)
-        db.session.delete(tried_beer)
-        db.session.commit()
+        if beer_id in tried_beer_ids:
+            tried_beer = TriedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
+            print(tried_beer)
+            db.session.delete(tried_beer)
+            db.session.commit()
+
+        else:
+            new_tried_beer = TriedBeer(
+                user_id = user_id,
+                beer_id = beer_id
+            )  
+            db.session.add(new_tried_beer)
+            db.session.commit()
+
+        return redirect(f"/user/{user_id}/tried")
 
     else:
-        new_tried_beer = TriedBeer(
-            user_id = user_id,
-            beer_id = beer_id
-        )  
-        db.session.add(new_tried_beer)
-        db.session.commit()
-
-
-    return redirect(f"/user/{user_id}/tried")
+        flash("Must be logged-in","warning")
+        return redirect("/")
 
 @app.route("/beer/liked/<beer_id>", methods = ["GET"])
 def update_liked_beer(beer_id):
     """ change status of liked beer (remove or update as necessary)"""
-    user_id = session[CURR_USER_KEY]
+    if CURR_USER_KEY in session:
+        user_id = session[CURR_USER_KEY]
 
-    liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
+        liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
 
-    print (liked_beer_ids)
+        print (liked_beer_ids)
 
-    if beer_id in liked_beer_ids:
-        liked_beer = LikedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
-        print(liked_beer)
-        db.session.delete(liked_beer)
-        db.session.commit()
+        if beer_id in liked_beer_ids:
+            liked_beer = LikedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
+            print(liked_beer)
+            db.session.delete(liked_beer)
+            db.session.commit()
+
+        else:
+            new_liked_beer = LikedBeer(
+                user_id = user_id,
+                beer_id = beer_id
+            )  
+            db.session.add(new_liked_beer)
+            db.session.commit()
+
+        return redirect(f"/user/{user_id}/liked")
 
     else:
-        new_liked_beer = LikedBeer(
-            user_id = user_id,
-            beer_id = beer_id
-        )  
-        db.session.add(new_liked_beer)
-        db.session.commit()
-
-
-    return redirect(f"/user/{user_id}/liked")
-
+        flash("Must be logged-in","warning")
+        return redirect("/")
+        
 @app.route("/beer/wished/<beer_id>", methods = ["GET"])
 def update_wished_beer(beer_id):
     """ change status of wished beer (remove or update as necessary)"""
-    user_id = session[CURR_USER_KEY]
+    if CURR_USER_KEY in session:
+        user_id = session[CURR_USER_KEY]
 
-    wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
+        wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
 
-    print (wished_beer_ids)
+        print (wished_beer_ids)
 
-    if beer_id in wished_beer_ids:
-        wished_beer = WishedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
-        print(wished_beer)
-        db.session.delete(wished_beer)
-        db.session.commit()
+        if beer_id in wished_beer_ids:
+            wished_beer = WishedBeer.query.filter_by(user_id = user_id, beer_id = beer_id).one()
+            print(wished_beer)
+            db.session.delete(wished_beer)
+            db.session.commit()
 
+        else:
+            new_wished_beer = WishedBeer(
+                user_id = user_id,
+                beer_id = beer_id
+            )  
+            db.session.add(new_wished_beer)
+            db.session.commit()
+
+        return redirect(f"/user/{user_id}/wished")
     else:
-        new_wished_beer = WishedBeer(
-            user_id = user_id,
-            beer_id = beer_id
-        )  
-        db.session.add(new_wished_beer)
-        db.session.commit()
-
-
-    return redirect(f"/user/{user_id}/wished")
+        flash("Must be logged-in","warning")
+        return redirect("/")
