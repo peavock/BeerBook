@@ -132,6 +132,25 @@ def show_style_page(style_id):
 
     return render_template("/beer/style.html", style = style_type, beers = beers, tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
 
+@app.route('/beer/<beer_id>', methods = ["GET"])
+def show_beer_page(beer_id):
+    """show a page with details on a beer and the reviews for it"""
+    response = requests.get(f"{API_BASE_URL}/beers",
+                        params = {'key':API_KEY,'ids':beer_id})
+    
+    beer = response.json()["data"][0]
+
+    user_id = session[CURR_USER_KEY]
+
+    reviews = Review.query.filter_by(beer_id = beer_id).all()
+
+    tried_beer_ids = [beer.beer_id for beer in TriedBeer.query.filter_by(user_id = user_id).all() ]
+    liked_beer_ids = [beer.beer_id for beer in LikedBeer.query.filter_by(user_id = user_id).all() ]
+    wished_beer_ids = [beer.beer_id for beer in WishedBeer.query.filter_by(user_id = user_id).all() ]
+
+    return render_template("beer/show.html", beer = beer, reviews = reviews, 
+        tried_beer_ids = tried_beer_ids, liked_beer_ids = liked_beer_ids, wished_beer_ids = wished_beer_ids)
+
 @app.route('/beer/review/<beer_id>', methods = ["GET","POST"])
 def handle_review_page(beer_id):
     """Page with form to fill out review of beer and submit"""

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+
+      <h2>BEER DETAILS</h2>
+      <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+              <div class="card" >
+                <div class="card-text">
+                  <p><a href="/beer/{{beer.id}}">{{beer.name}}</a></p>
+                </div>
+                {% if beer.labels %}
+                    <img src = "{{beer.labels.medium}}" class="card-img-top" style="width: 18rem" alt="{{beer.name}} photo">
+                {% endif %}
+                <div class="card-body">
+                  <p>{{beer.description}}</p>
+                  
+                  <p>ABV: {{beer.abv}}</p>
+                  <a href="/beer/tried/{{beer.id}}">
+                      <i class="far fa-check-square 
+                      {{'text-success' if beer.id in tried_beer_ids else 'text-secondary'}}"></i>
+                  </a>
+                  <a href="/beer/liked/{{beer.id}}">
+                      <i class="far fa-thumbs-up 
+                      {{'text-success' if beer.id in liked_beer_ids else 'text-secondary'}}"></i>
+                  </a>
+                  <a href="/beer/wished/{{beer.id}}">
+                      <i class="far fa-flag 
+                      {{'text-warning' if beer.id in wished_beer_ids else 'text-secondary'}}"></i>
+                  </a>
+                  <a href="/beer/review/{{beer.id}}"><i class="far fa-comment"></i>
+                  </a>
+              </div>
+              </div>
+            </div>
+        </div>
+      </div>
+
+</div>
+{% if reviews %}
+  
+<div>
+
+    <h2>{{beer.name}} reviews</h2>
+    <div class="container-fluid">
+      <div class="row">
+        {% for review in reviews %}
+          <div class="col-sm-6 col-xl-4 my-1">
+            <div class="card">
+
+              <div class="card-body">
+                <p>Rating: {{review.rating}}</p>
+                <p>{{review.text}}</p>
+                <p>Author: {{review.author.username}}</p>
+                {% if g.user.id == review.author.id %}
+                    <div class="d-inline-flex">
+                    <form method = "post" action="/user/reviews/{{review.id}}/edit">
+                        <button><i class ="fas fa-edit text-dark"></i></button>
+                    </form>
+                    <form method = "post" action="/user/reviews/{{review.id}}/delete">
+                        <button  ><i class ="far fa-trash-alt text-danger"></i></button>
+                    </form>
+                    </div>
+                {% endif %}
+              </div>
+
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+</div>
+{% endif %}
+{% endblock %}

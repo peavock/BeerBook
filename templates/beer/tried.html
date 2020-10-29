@@ -11,6 +11,9 @@
                 <div class="card-text">
                   <p><a href="/beer/{{beer.id}}">{{beer.name}}</a></p>
                 </div>
+                {% if beer.labels %}
+                <img src = "{{beer.labels.medium}}" class="card-img-top" style="width: 18rem" alt="{{beer.name}} photo">
+                {% endif %}
 
                 <div class="card-body">
                     <p>{{beer.description}}</p>

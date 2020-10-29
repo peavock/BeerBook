@@ -7,9 +7,13 @@
         <div class="row">
           {% for beer in beers %}
             <div class="col-sm-6 col-xl-4 my-1">
-              <div class="card">
+
+              <div class="card text-center">
                 <div class="card-text">
                   <p><a href="/beer/{{beer.id}}">{{beer.name}}</a></p>
+                  {% if beer.labels %}
+                  <img src = "{{beer.labels.medium}}" class="card-img-top" style="width: 18rem" alt="{{beer.name}} photo">
+                  {% endif %}
                 </div>
 
                 <div class="card-body">
